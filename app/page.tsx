@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { Plus, RotateCcw, Wind } from "lucide-react";
 import { useWebHaptics } from "web-haptics/react";
-import WebHaptics from "web-haptics";
+import { WebHaptics } from "web-haptics";
 import { useCalorieStore } from "@/hooks/useCalorieStore";
 import { useSwipe } from "@/hooks/useSwipe";
 import { FluidProgress } from "@/components/tracker/FluidProgress";

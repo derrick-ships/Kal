@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useWebHaptics } from "web-haptics/react";
-import WebHaptics from "web-haptics";
+import { WebHaptics } from "web-haptics";
 
 interface Props { onDone: () => void; }
 type Phase = "in" | "hold1" | "out" | "hold2";

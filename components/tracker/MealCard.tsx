@@ -1,7 +1,7 @@
 "use client";
 import { Plus, Trash2 } from "lucide-react";
 import { useWebHaptics } from "web-haptics/react";
-import WebHaptics from "web-haptics";
+import { WebHaptics } from "web-haptics";
 import type { Meal } from "@/hooks/useCalorieStore";
 
 interface Props { meal: Meal; onLog: (m: Meal) => void; onDelete: (id: string) => void; isLast?: boolean; }
