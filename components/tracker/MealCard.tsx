@@ -1,10 +1,13 @@
 "use client";
 import { Plus, Trash2 } from "lucide-react";
+import { useWebHaptics } from "web-haptics/react";
+import WebHaptics from "web-haptics";
 import type { Meal } from "@/hooks/useCalorieStore";
 
 interface Props { meal: Meal; onLog: (m: Meal) => void; onDelete: (id: string) => void; isLast?: boolean; }
 
 export function MealCard({ meal, onLog, onDelete, isLast = false }: Props) {
+  const { trigger } = useWebHaptics();
   return (
     <div
       className="anim-fade-up"
@@ -76,7 +79,11 @@ export function MealCard({ meal, onLog, onDelete, isLast = false }: Props) {
         </button>
 
         <button
-          onClick={() => { onLog(meal); if (navigator.vibrate) navigator.vibrate([25, 10, 40]); }}
+          onClick={() => {
+              onLog(meal);
+              if (WebHaptics.isSupported) trigger([{ duration: 30, intensity: 0.4 }]);
+              else if (navigator.vibrate) navigator.vibrate([25, 10, 40]);
+            }}
           style={{
             width: 32,
             height: 32,

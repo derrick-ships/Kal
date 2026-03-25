@@ -2,6 +2,8 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { Plus, RotateCcw, Wind } from "lucide-react";
+import { useWebHaptics } from "web-haptics/react";
+import WebHaptics from "web-haptics";
 import { useCalorieStore } from "@/hooks/useCalorieStore";
 import { useSwipe } from "@/hooks/useSwipe";
 import { FluidProgress } from "@/components/tracker/FluidProgress";
@@ -14,6 +16,7 @@ import { Confetti } from "@/components/tracker/Confetti";
 
 export default function Home() {
   const { store, loaded, addMeal, logMeal, setGoal, resetDay, deleteMeal } = useCalorieStore();
+  const { trigger } = useWebHaptics();
   const [modalOpen, setModalOpen] = useState(false);
   const [urgeOpen, setUrgeOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -24,9 +27,10 @@ export default function Home() {
   const [kcalKey, setKcalKey] = useState(0);
 
   const triggerUrge = useCallback(() => {
-    if (navigator.vibrate) navigator.vibrate([60, 30, 80]);
+    if (WebHaptics.isSupported) trigger("nudge");
+    else if (navigator.vibrate) navigator.vibrate([60, 30, 80]);
     setUrgeOpen(true);
-  }, []);
+  }, [trigger]);
 
   const { onTouchStart, onTouchEnd } = useSwipe(triggerUrge);
 
@@ -59,14 +63,16 @@ export default function Home() {
   const handleReset = useCallback(() => {
     if (!confirmReset) {
       setConfirmReset(true);
-      if (navigator.vibrate) navigator.vibrate(25);
+      if (WebHaptics.isSupported) trigger("error");
+      else if (navigator.vibrate) navigator.vibrate(25);
       setTimeout(() => setConfirmReset(false), 3000);
       return;
     }
     resetDay();
     setConfirmReset(false);
     setToast("Day reset");
-    if (navigator.vibrate) navigator.vibrate([25, 15, 40]);
+    if (WebHaptics.isSupported) trigger("error");
+    else if (navigator.vibrate) navigator.vibrate([25, 15, 40]);
     setKcalKey(k => k + 1);
   }, [confirmReset, resetDay]);
 
@@ -386,7 +392,8 @@ export default function Home() {
           <button
             onClick={() => {
               setModalOpen(true);
-              if (navigator.vibrate) navigator.vibrate(25);
+              if (WebHaptics.isSupported) trigger("success");
+              else if (navigator.vibrate) navigator.vibrate(25);
             }}
             className="fab"
             aria-label="Add meal"

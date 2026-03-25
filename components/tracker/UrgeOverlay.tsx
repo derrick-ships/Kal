@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import { useWebHaptics } from "web-haptics/react";
+import WebHaptics from "web-haptics";
 
 interface Props { onDone: () => void; }
 type Phase = "in" | "hold1" | "out" | "hold2";
@@ -14,6 +16,7 @@ export function UrgeOverlay({ onDone }: Props) {
   const [pt, setPt] = useState(0);
   const [done, setDone] = useState(false);
   const phaseIdx = useRef(0);
+  const { trigger } = useWebHaptics();
 
   // Entrance haptic
   useEffect(() => {
@@ -38,7 +41,6 @@ export function UrgeOverlay({ onDone }: Props) {
         phaseIdx.current = (phaseIdx.current + 1) % 4;
         const newPhase = PHASES[phaseIdx.current];
         setPhase(newPhase);
-        // Subtle haptic on phase change
         if (navigator.vibrate) navigator.vibrate(12);
         return 0;
       }
@@ -55,7 +57,6 @@ export function UrgeOverlay({ onDone }: Props) {
     : phase === "out" ? 1.3 - prog * 0.3
     : 1.0;
 
-  // Warm/cool accent per phase
   const accentColor = isExpand ? "rgba(196,164,124,0.7)" : "rgba(180,200,196,0.6)";
   const bgGlow = isExpand
     ? "radial-gradient(ellipse at 50% 55%, rgba(196,164,124,0.06) 0%, transparent 65%)"
@@ -72,7 +73,6 @@ export function UrgeOverlay({ onDone }: Props) {
         background: "#0A0A08",
       }}
     >
-      {/* Background glow */}
       <div style={{
         position: "absolute",
         inset: 0,
@@ -83,19 +83,19 @@ export function UrgeOverlay({ onDone }: Props) {
 
       {!done ? (
         <>
-          {/* Label */}
+          {/* "urge interrupt" label — was 0.20 → 0.50 (was 1.6:1, now 4.7:1) */}
           <p style={{
             fontSize: 9,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "rgba(240,235,224,0.2)",
+            color: "rgba(240,235,224,0.50)",
             marginBottom: 48,
             fontFamily: "var(--font-display)",
           }}>
             urge interrupt
           </p>
 
-          {/* Large countdown number */}
+          {/* Countdown — 0.88 was already passing */}
           <div style={{
             fontFamily: "var(--font-display)",
             fontSize: 108,
@@ -110,9 +110,10 @@ export function UrgeOverlay({ onDone }: Props) {
             {t}
           </div>
 
+          {/* "seconds" label — was 0.22 → 0.50 (was 1.8:1, now 4.7:1) */}
           <p style={{
             fontSize: 10,
-            color: "rgba(240,235,224,0.22)",
+            color: "rgba(240,235,224,0.50)",
             marginBottom: 56,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
@@ -122,7 +123,6 @@ export function UrgeOverlay({ onDone }: Props) {
 
           {/* Breathing orb */}
           <div style={{ position: "relative", width: 100, height: 100 }}>
-            {/* Glow ring */}
             <div style={{
               position: "absolute",
               inset: -8,
@@ -132,7 +132,6 @@ export function UrgeOverlay({ onDone }: Props) {
               transform: `scale(${scale})`,
               transition: "transform 0.1s linear, background 1s ease",
             }} />
-            {/* Orb */}
             <div style={{
               width: "100%",
               height: "100%",
@@ -145,7 +144,7 @@ export function UrgeOverlay({ onDone }: Props) {
             }} />
           </div>
 
-          {/* Phase label */}
+          {/* Phase label — 0.55 was already passing (4.9:1) */}
           <p style={{
             marginTop: 40,
             fontSize: 14,
@@ -156,32 +155,37 @@ export function UrgeOverlay({ onDone }: Props) {
             {LABELS[phase]}
           </p>
 
+          {/* "4·4·4·4" — was 0.16 → 0.50 (was 1.5:1, now 4.7:1) */}
           <p style={{
             marginTop: 5,
             fontSize: 9,
-            color: "rgba(240,235,224,0.16)",
+            color: "rgba(240,235,224,0.50)",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
           }}>
             4 · 4 · 4 · 4
           </p>
 
-          {/* Phase dots */}
+          {/* Phase dots — non-text UI, was 0.10 → 0.35 (was 1.3:1, now 3.3:1, meets 3:1 non-text) */}
           <div style={{ display: "flex", gap: 6, marginTop: 28 }}>
             {PHASES.map(p => (
               <div key={p} style={{
                 height: 2,
                 width: p === phase ? 22 : 5,
                 borderRadius: 1,
-                background: p === phase ? accentColor : "rgba(240,235,224,0.1)",
+                background: p === phase ? accentColor : "rgba(240,235,224,0.35)",
                 transition: "all 0.45s cubic-bezier(0.16,1,0.3,1)",
               }} />
             ))}
           </div>
 
-          {/* Dismiss */}
+          {/* "esc" — was 0.20 → 0.50 (was 1.6:1, now 4.7:1) */}
           <button
-            onClick={() => { if (navigator.vibrate) navigator.vibrate(20); onDone(); }}
+            onClick={() => {
+              if (WebHaptics.isSupported) trigger("nudge");
+              else if (navigator.vibrate) navigator.vibrate(20);
+              onDone();
+            }}
             style={{
               position: "absolute",
               top: "max(28px, env(safe-area-inset-top))",
@@ -189,7 +193,7 @@ export function UrgeOverlay({ onDone }: Props) {
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              color: "rgba(240,235,224,0.2)",
+              color: "rgba(240,235,224,0.50)",
               fontSize: 10,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
@@ -202,11 +206,12 @@ export function UrgeOverlay({ onDone }: Props) {
         </>
       ) : (
         <div className="anim-fade-up" style={{ textAlign: "center", padding: "0 48px" }}>
+          {/* "complete" label — was rgba(accent,0.5) → var(--accent) full (was 2.9:1, now 8.4:1) */}
           <p style={{
             fontSize: 9,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "rgba(196,164,124,0.5)",
+            color: "var(--accent)",
             marginBottom: 20,
           }}>
             complete
@@ -221,8 +226,9 @@ export function UrgeOverlay({ onDone }: Props) {
           }}>
             Urge passed.
           </h2>
+          {/* "Back to tracking." — was 0.30 → 0.50 (was 2.4:1, now 4.7:1) */}
           <p style={{
-            color: "rgba(240,235,224,0.3)",
+            color: "rgba(240,235,224,0.50)",
             fontSize: 13,
             fontWeight: 300,
             letterSpacing: "0.04em",

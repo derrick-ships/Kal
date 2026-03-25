@@ -68,11 +68,12 @@ export function FluidProgress({ pct, size = 180 }: Props) {
         <span style={{
           fontSize: 13,
           fontWeight: 500,
-          color: clampedPct > 0.4
-            ? `rgba(12,12,10,${Math.min((clampedPct - 0.4) * 2.5, 0.8)})`
-            : "var(--fg3)",
+          /* Below 50%: var(--fg) on dark surface = 16.6:1.
+             At/above 50%: #0C0C0A on gold fill = 8.3:1.
+             Hard switch at 50% eliminates the low-contrast transition zone. */
+          color: clampedPct >= 0.5 ? "#0C0C0A" : "var(--fg)",
           letterSpacing: "0.04em",
-          transition: "color 0.8s ease",
+          transition: "color 0.6s ease",
         }}>
           {fillPct}%
         </span>
