@@ -20,10 +20,10 @@ export function CircleProgress({ current, goal, size = 120 }: Props) {
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="currentColor"
-          strokeWidth={strokeWidth} className="text-black/10 dark:text-white/10" />
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="url(#emeraldGrad)"
-          strokeWidth={strokeWidth} strokeLinecap="round"
+        <circle cx={size/2} cy={size/2} r={radius} fill="none"
+          stroke="var(--ring-track)" strokeWidth={strokeWidth} />
+        <circle cx={size/2} cy={size/2} r={radius} fill="none"
+          stroke="url(#emeraldGrad)" strokeWidth={strokeWidth} strokeLinecap="round"
           strokeDasharray={circumference} strokeDashoffset={offset}
           style={{ transition: "stroke-dashoffset 0.8s ease-out" }} />
         <defs>
