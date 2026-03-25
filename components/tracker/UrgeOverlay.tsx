@@ -3,94 +3,145 @@ import { useEffect, useState, useRef } from "react";
 
 interface Props { onDone: () => void; }
 type Phase = "in" | "hold1" | "out" | "hold2";
-
-const PHASE_LABELS: Record<Phase, string> = { in: "Breathe in", hold1: "Hold", out: "Breathe out", hold2: "Hold" };
 const PHASES: Phase[] = ["in", "hold1", "out", "hold2"];
-const PHASE_DURATION = 4000;
-const TOTAL_SECONDS = 90;
+const LABELS: Record<Phase, string> = { in: "Inhale", hold1: "Hold", out: "Exhale", hold2: "Hold" };
+const PHASE_MS = 4000;
+const TOTAL = 90;
 
 export function UrgeOverlay({ onDone }: Props) {
-  const [timeLeft, setTimeLeft] = useState(TOTAL_SECONDS);
+  const [t, setT] = useState(TOTAL);
   const [phase, setPhase] = useState<Phase>("in");
-  const [phaseTime, setPhaseTime] = useState(0);
+  const [pt, setPt] = useState(0);
   const [done, setDone] = useState(false);
-  const phaseRef = useRef(0);
+  const phaseIdx = useRef(0);
 
-  useEffect(() => { if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]); }, []);
+  useEffect(() => { if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 150]); }, []);
 
   useEffect(() => {
     if (done) return;
-    const interval = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) { clearInterval(interval); setDone(true); setTimeout(onDone, 2500); return 0; }
-        return t - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
+    const id = setInterval(() => setT(p => {
+      if (p <= 1) { clearInterval(id); setDone(true); setTimeout(onDone, 2800); return 0; }
+      return p - 1;
+    }), 1000);
+    return () => clearInterval(id);
   }, [done, onDone]);
 
   useEffect(() => {
     if (done) return;
-    const interval = setInterval(() => {
-      setPhaseTime((t) => {
-        if (t + 100 >= PHASE_DURATION) {
-          phaseRef.current = (phaseRef.current + 1) % 4;
-          setPhase(PHASES[phaseRef.current]);
-          return 0;
-        }
-        return t + 100;
-      });
-    }, 100);
-    return () => clearInterval(interval);
+    const id = setInterval(() => setPt(p => {
+      if (p + 100 >= PHASE_MS) {
+        phaseIdx.current = (phaseIdx.current + 1) % 4;
+        setPhase(PHASES[phaseIdx.current]);
+        return 0;
+      }
+      return p + 100;
+    }), 100);
+    return () => clearInterval(id);
   }, [done]);
 
-  const progress = phaseTime / PHASE_DURATION;
-  const squareScale = phase === "in" ? 1 + progress * 0.18 : phase === "hold1" ? 1.18 : phase === "out" ? 1.18 - progress * 0.18 : 1;
-  const squareColor = phase === "in" ? `rgba(239,68,68,${0.6 + progress * 0.3})` : phase === "hold1" ? "rgba(251,146,60,0.9)" : phase === "out" ? `rgba(16,185,129,${0.3 + progress * 0.6})` : "rgba(16,185,129,0.4)";
+  const prog = pt / PHASE_MS;
+  const isWarm = phase === "in" || phase === "hold1";
+  const scale = phase === "in" ? 1 + prog * 0.25
+    : phase === "hold1" ? 1.25
+    : phase === "out" ? 1.25 - prog * 0.25 : 1;
 
-  const bgColor = done
-    ? "linear-gradient(135deg, #064e3b, #065f46)"
-    : phase === "in" || phase === "hold1"
-    ? "linear-gradient(135deg, #450a0a, #7f1d1d, #431407)"
-    : "linear-gradient(135deg, #022c22, #064e3b, #0f4c40)";
+  const borderColor = isWarm
+    ? `rgba(239,68,68,${0.5 + prog * 0.45})`
+    : `rgba(16,185,129,${0.45 + prog * 0.5})`;
+  const glowColor = isWarm
+    ? `rgba(239,68,68,${0.08 + prog * 0.15})`
+    : `rgba(16,185,129,${0.06 + prog * 0.18})`;
 
-  const mins = String(Math.floor(timeLeft / 60)).padStart(2, "0");
-  const secs = String(timeLeft % 60).padStart(2, "0");
+  const bg = done
+    ? "radial-gradient(ellipse at 50% 40%, #042a1d 0%, #060606 70%)"
+    : isWarm
+    ? "radial-gradient(ellipse at 50% 40%, #200808 0%, #060606 70%)"
+    : "radial-gradient(ellipse at 50% 40%, #041c12 0%, #060606 70%)";
+
+  const mins = String(Math.floor(t / 60)).padStart(2, "0");
+  const secs = String(t % 60).padStart(2, "0");
 
   return (
-    /* overlay-portal escapes the body max-width stacking context → true fullscreen */
-    <div
-      className="overlay-portal flex flex-col items-center justify-center animate-urge-in"
-      style={{ background: bgColor, transition: "background 2s ease" }}
-    >
+    <div className="overlay-portal anim-urge-in" style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      background: bg, transition: "background 2s ease",
+    }}>
       {!done ? (
         <>
-          <div className="text-7xl font-bold text-white/90 tabular-nums mb-2">{mins}:{secs}</div>
-          <p className="text-white/50 text-sm font-medium mb-16 tracking-widest uppercase">Beat the urge</p>
-          <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
-            <div className="rounded-3xl border-4" style={{
+          {/* Label */}
+          <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase",
+            color: "rgba(255,255,255,0.2)", marginBottom: 36,
+            fontFamily: "var(--font-display)" }}>
+            urge interrupt
+          </p>
+
+          {/* Timer */}
+          <div style={{
+            fontFamily: "var(--font-display)",
+            fontSize: 80, fontWeight: 500,
+            color: "rgba(255,255,255,0.92)",
+            letterSpacing: "-0.05em", lineHeight: 1,
+            marginBottom: 10,
+          }}>
+            {mins}:{secs}
+          </div>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 60, letterSpacing: "0.04em" }}>
+            {LABELS[phase].toLowerCase()}
+          </p>
+
+          {/* Breathing square */}
+          <div style={{ position: "relative", width: 200, height: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* Outer blur glow */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: glowColor,
+              borderRadius: "40%",
+              transform: `scale(${scale * 1.6})`,
+              transition: "transform 0.1s linear, background 0.6s ease",
+              filter: "blur(24px)",
+            }} />
+            {/* Square */}
+            <div style={{
               width: 120, height: 120,
-              transform: `scale(${squareScale})`,
-              borderColor: squareColor,
-              backgroundColor: squareColor.replace("0.9", "0.12").replace("0.6", "0.08").replace("0.4", "0.06"),
+              borderRadius: 26,
+              border: `2px solid ${borderColor}`,
+              background: `rgba(255,255,255,0.015)`,
+              transform: `scale(${scale})`,
               transition: "transform 0.1s linear, border-color 0.5s ease",
-              boxShadow: `0 0 40px ${squareColor}`,
+              boxShadow: `0 0 0 1px ${glowColor}, 0 0 40px ${borderColor.replace("0.9","0.2").replace("0.5","0.15")}`,
             }} />
           </div>
-          <p className="mt-10 text-white/80 text-lg font-semibold tracking-wide">{PHASE_LABELS[phase]}</p>
-          <p className="text-white/40 text-sm mt-1">4 · 4 · 4 · 4</p>
-          <div className="flex gap-2 mt-6">
-            {PHASES.map((p) => (
-              <div key={p} className="w-2 h-2 rounded-full transition-all duration-300"
-                style={{ background: p === phase ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.25)", transform: p === phase ? "scale(1.4)" : "scale(1)" }} />
+
+          <p style={{ marginTop: 36, fontSize: 16, fontWeight: 500,
+            color: "rgba(255,255,255,0.6)", letterSpacing: "0.02em" }}>
+            {LABELS[phase]}
+          </p>
+          <p style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.18)",
+            fontFamily: "var(--font-display)", letterSpacing: "0.1em" }}>
+            4 · 4 · 4 · 4
+          </p>
+
+          {/* Phase indicator — pill dots */}
+          <div style={{ display: "flex", gap: 6, marginTop: 32 }}>
+            {PHASES.map(p => (
+              <div key={p} style={{
+                height: 4,
+                width: p === phase ? 24 : 6,
+                borderRadius: 2,
+                background: p === phase
+                  ? (isWarm ? "var(--red)" : "var(--green)")
+                  : "rgba(255,255,255,0.12)",
+                transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
+              }} />
             ))}
           </div>
         </>
       ) : (
-        <div className="text-center animate-fade-in px-8">
-          <div className="text-6xl mb-4">💪</div>
-          <h2 className="text-3xl font-bold text-white mb-2">Urge beaten.</h2>
-          <p className="text-white/60 text-lg">Back to tracking.</p>
+        <div className="anim-fade-up" style={{ textAlign: "center", padding: "0 40px" }}>
+          <div style={{ fontSize: 60, marginBottom: 20 }}>💪</div>
+          <h2 style={{ fontSize: 30, fontWeight: 600, color: "var(--fg)",
+            letterSpacing: "-0.03em", marginBottom: 10 }}>Urge beaten.</h2>
+          <p style={{ color: "var(--fg3)", fontSize: 15 }}>Back to tracking.</p>
         </div>
       )}
     </div>
