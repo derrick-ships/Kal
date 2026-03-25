@@ -22,28 +22,27 @@ export function AddMealModal({ open, onClose, onSave }: Props) {
   return (
     <div className="overlay-portal" style={{
       display: "flex", alignItems: "flex-end", justifyContent: "center",
-      background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)",
+      background: "rgba(0,0,0,0.75)",
     }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="anim-sheet" style={{
         width: "100%", maxWidth: 430,
-        background: "var(--surface)",
-        borderTop: "1px solid var(--border2)",
+        background: "#1C1C1E",
         borderRadius: "24px 24px 0 0",
         padding: "0 20px calc(28px + env(safe-area-inset-bottom))",
       }}>
         {/* Handle bar */}
         <div style={{ display: "flex", justifyContent: "center", padding: "14px 0 20px" }}>
-          <div style={{ width: 32, height: 4, background: "var(--border2)", borderRadius: 2 }} />
+          <div style={{ width: 32, height: 4, background: "rgba(235,235,245,0.3)", borderRadius: 2 }} />
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.03em" }}>Log meal</h2>
-            <p style={{ fontSize: 12, color: "var(--fg3)", marginTop: 2 }}>Add to today's total</p>
+            <p style={{ fontSize: 12, color: "var(--fg3)", marginTop: 2 }}>Add to today&apos;s total</p>
           </div>
           <button onClick={onClose} style={{
-            width: 32, height: 32, borderRadius: "50%", border: "1px solid var(--border)",
-            background: "transparent", cursor: "pointer", display: "flex",
+            width: 32, height: 32, borderRadius: "50%", border: "none",
+            background: "var(--card2)", cursor: "pointer", display: "flex",
             alignItems: "center", justifyContent: "center", color: "var(--fg2)",
           }}>
             <X size={15} />
@@ -52,14 +51,22 @@ export function AddMealModal({ open, onClose, onSave }: Props) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--fg3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+            <label style={{
+              display: "block", fontSize: 12, fontWeight: 600,
+              color: "var(--fg3)", textTransform: "uppercase",
+              letterSpacing: "0.08em", marginBottom: 8,
+            }}>
               Meal name
             </label>
             <input className="input-field" value={name} onChange={e => setName(e.target.value)}
               placeholder="Oatmeal bowl" autoFocus />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--fg3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+            <label style={{
+              display: "block", fontSize: 12, fontWeight: 600,
+              color: "var(--fg3)", textTransform: "uppercase",
+              letterSpacing: "0.08em", marginBottom: 8,
+            }}>
               Calories (kcal)
             </label>
             <input className="input-field" type="number" inputMode="numeric"

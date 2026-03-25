@@ -2,28 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
 :root {
-  --bg: #080808;
-  --bg2: #0f0f0f;
-  --surface: #141414;
-  --surface2: #1c1c1c;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-  --fg: #f0f0f0;
-  --fg2: #888;
-  --fg3: #555;
-  --green: #10B981;
-  --green-dim: rgba(16,185,129,0.12);
-  --green-glow: rgba(16,185,129,0.25);
-  --red: #ef4444;
-  --orange: #f97316;
-  --font-display: 'DM Mono', monospace;
-  --font-body: 'DM Sans', sans-serif;
+  --bg: #000000;
+  --card: #1C1C1E;
+  --card2: #2C2C2E;
+  --border: rgba(255,255,255,0.1);
+  --fg: #FFFFFF;
+  --fg2: rgba(235,235,245,0.6);
+  --fg3: rgba(235,235,245,0.3);
+  --green: #30D158;
+  --green-glow: rgba(48,209,88,0.2);
+  --red: #FF453A;
+  --font-display: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-body: -apple-system, "SF Pro Text", system-ui, sans-serif;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-variant-numeric: tabular-nums; }
 html { overscroll-behavior: none; background: var(--bg); }
 body {
   font-family: var(--font-body);
@@ -36,32 +30,13 @@ body {
   overscroll-behavior: none;
   position: relative;
 }
-body::after {
-  content: '';
-  position: fixed;
-  top: -120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 500px;
-  height: 300px;
-  background: radial-gradient(ellipse, rgba(16,185,129,0.07) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
 .overlay-portal { position: fixed; inset: 0; z-index: 9999; }
-.meal-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  transition: border-color 0.2s, background 0.2s;
-}
-.meal-item:active { background: var(--surface2); border-color: var(--border2); }
 .btn-primary {
   background: var(--green);
   color: #000;
   font-family: var(--font-body);
   font-weight: 600;
-  border-radius: 14px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
   transition: all 0.15s;
@@ -69,44 +44,40 @@ body::after {
 .btn-primary:active { transform: scale(0.97); filter: brightness(0.9); }
 .btn-ghost {
   background: transparent;
-  color: var(--fg2);
+  color: var(--fg3);
   font-family: var(--font-body);
   font-weight: 500;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s;
 }
-.btn-ghost:active { background: var(--surface2); }
+.btn-ghost:active { background: var(--card2); }
 .fab {
-  width: 60px; height: 60px;
+  width: 56px; height: 56px;
   background: var(--green);
   border: none; border-radius: 50%;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.2s;
-  animation: fab-pulse 3s ease-in-out infinite;
+  will-change: transform;
 }
 .fab:active { transform: scale(0.92); }
 .input-field {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--card2);
+  border: none;
+  border-radius: 10px;
   color: var(--fg);
   font-family: var(--font-body);
   font-size: 16px;
-  width: 100%; height: 52px;
+  width: 100%; height: 44px;
   padding: 0 16px;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: box-shadow 0.2s;
 }
 .input-field::placeholder { color: var(--fg3); }
-.input-field:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+.input-field:focus { box-shadow: 0 0 0 2px var(--green); }
 
-@keyframes fab-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--green-glow), 0 8px 24px rgba(16,185,129,0.3); }
-  50%       { box-shadow: 0 0 0 10px transparent, 0 8px 32px rgba(16,185,129,0.5); }
-}
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }

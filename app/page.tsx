@@ -1,7 +1,7 @@
 "use client";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { Plus, Flame, RotateCcw, Target, Wind } from "lucide-react";
+import { Plus, Flame, RotateCcw, Wind } from "lucide-react";
 import { useCalorieStore } from "@/hooks/useCalorieStore";
 import { useSwipe } from "@/hooks/useSwipe";
 import { CircleProgress } from "@/components/tracker/CircleProgress";
@@ -86,15 +86,31 @@ export default function Home() {
       {/* ── HEADER ── */}
       <header style={{
         padding: "56px 20px 20px",
+        paddingTop: "max(56px, calc(env(safe-area-inset-top) + 16px))",
         position: "sticky", top: 0, zIndex: 20,
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        backgroundColor: "rgba(8,8,8,0.88)",
-        borderBottom: "1px solid var(--border)",
-        background: "linear-gradient(180deg, rgba(16,185,129,0.04) 0%, rgba(8,8,8,0.88) 100%)",
+        background: "#000000",
       }}>
-        {/* Row: ring + numbers */}
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        {/* App title */}
+        <h1 style={{
+          fontSize: 34, fontWeight: 700,
+          color: "var(--fg)",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.1,
+          fontFamily: "var(--font-display)",
+        }}>
+          KalTrak
+        </h1>
+
+        {/* Date subtitle */}
+        <p style={{
+          fontSize: 15, color: "var(--fg2)",
+          marginTop: 2, marginBottom: 20,
+        }}>
+          {format(new Date(), "EEEE, MMM d")}
+        </p>
+
+        {/* Ring + numbers row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           {/* Ring with % inside */}
           <div style={{ position: "relative", flexShrink: 0 }}>
             <CircleProgress current={store.today.kcal} goal={store.today.goal} size={84} />
@@ -104,16 +120,15 @@ export default function Home() {
             }}>
               <span style={{
                 fontFamily: "var(--font-display)",
-                fontSize: 12, fontWeight: 500,
-                color: isHit ? "var(--green)" : "var(--fg3)",
-                letterSpacing: "-0.02em",
+                fontSize: 13, fontWeight: 600,
+                color: "var(--fg)",
               }}>
                 {pct}%
               </span>
             </div>
           </div>
 
-          {/* Calorie number */}
+          {/* Calorie numbers */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               key={kcalKey}
@@ -122,107 +137,98 @@ export default function Home() {
             >
               <span style={{
                 fontFamily: "var(--font-display)",
-                fontSize: 48, fontWeight: 500,
+                fontSize: 34, fontWeight: 700,
                 color: "var(--fg)",
-                letterSpacing: "-0.05em",
+                letterSpacing: "-0.02em",
                 lineHeight: 1,
               }}>
                 {store.today.kcal.toLocaleString()}
               </span>
-              <span style={{ fontSize: 13, color: "var(--fg3)", fontWeight: 400, paddingBottom: 3 }}>
+              <span style={{ fontSize: 15, color: "var(--fg2)", fontWeight: 400, paddingBottom: 2 }}>
                 kcal
               </span>
             </div>
 
             <p style={{
-              fontSize: 12, marginTop: 5, fontWeight: 500,
-              color: isHit ? "var(--green)" : "var(--fg2)",
+              fontSize: 15, marginTop: 4, fontWeight: 400,
+              color: "var(--fg2)",
             }}>
-              {isHit ? "🎯 Goal reached" : `${remaining.toLocaleString()} to go`}
-            </p>
-            <p style={{ fontSize: 11, color: "var(--fg3)", marginTop: 2 }}>
-              {format(new Date(), "EEEE, MMM d")}
+              {isHit ? "Goal reached" : `${remaining.toLocaleString()} remaining`}
             </p>
           </div>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{
-          marginTop: 16, height: 2, borderRadius: 1,
-          background: "rgba(255,255,255,0.05)", overflow: "hidden",
-        }}>
-          <div style={{
-            height: "100%",
-            width: `${Math.min(pct, 100)}%`,
-            borderRadius: 1,
-            background: isHit ? "var(--green)" : "linear-gradient(90deg, #059669, #34d399)",
-            boxShadow: pct > 0 ? "0 0 10px rgba(16,185,129,0.6)" : "none",
-            transition: "width 0.9s cubic-bezier(0.16,1,0.3,1)",
-          }} />
         </div>
       </header>
 
       {/* ── BODY ── */}
       <section style={{ flex: 1, padding: "20px 16px 0" }}>
 
-        {/* Section label */}
+        {/* Meals card */}
         <div style={{
-          display: "flex", alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 12, padding: "0 2px",
+          background: "var(--card)",
+          borderRadius: 12,
+          overflow: "hidden",
         }}>
-          <span style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "var(--fg3)",
-            fontFamily: "var(--font-display)",
-          }}>
-            Saved meals
-          </span>
-          <span style={{ fontSize: 11, color: "var(--fg3)", fontFamily: "var(--font-display)" }}>
-            {store.meals.length}
-          </span>
-        </div>
-
-        {/* List */}
-        {!loaded ? <SkeletonList /> : store.meals.length === 0 ? (
-          <div style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center", padding: "52px 24px", gap: 12, textAlign: "center",
-          }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 14,
-              background: "var(--green-dim)",
-              border: "1px solid rgba(16,185,129,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
+          {/* Section header inside card */}
+          <div style={{ padding: "16px 16px 8px" }}>
+            <span style={{
+              fontSize: 12, fontWeight: 600, letterSpacing: "0.08em",
+              textTransform: "uppercase", color: "var(--fg3)",
             }}>
-              <Flame size={20} color="var(--green)" strokeWidth={1.5} />
+              Saved Meals
+              {store.meals.length > 0 && (
+                <span style={{ marginLeft: 8, fontWeight: 400 }}>
+                  {store.meals.length}
+                </span>
+              )}
+            </span>
+          </div>
+
+          {/* List */}
+          {!loaded ? <SkeletonList /> : store.meals.length === 0 ? (
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center",
+              justifyContent: "center", padding: "40px 24px", gap: 10, textAlign: "center",
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: "rgba(48,209,88,0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Flame size={20} color="var(--green)" strokeWidth={1.5} />
+              </div>
+              <p style={{ color: "var(--fg2)", fontSize: 15, fontWeight: 400 }}>
+                Your favorites will appear here.
+              </p>
+              <p style={{ color: "var(--fg3)", fontSize: 13 }}>Tap + to log your first meal.</p>
             </div>
-            <p style={{ color: "var(--fg2)", fontSize: 14, fontWeight: 500 }}>
-              Your favorites will appear here.
-            </p>
-            <p style={{ color: "var(--fg3)", fontSize: 13 }}>Tap + to log your first meal.</p>
-          </div>
-        ) : (
-          <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {store.meals.map(meal => (
-              <MealCard key={meal.id} meal={meal} onLog={handleLog} onDelete={deleteMeal} />
-            ))}
-          </div>
-        )}
+          ) : (
+            <div>
+              {store.meals.map((meal, i) => (
+                <MealCard
+                  key={meal.id}
+                  meal={meal}
+                  onLog={handleLog}
+                  onDelete={deleteMeal}
+                  isLast={i === store.meals.length - 1}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Urge trigger hint */}
         <button
           onClick={triggerUrge}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
-            gap: 8, width: "100%", marginTop: 20,
+            gap: 8, width: "100%", marginTop: 16,
             padding: "11px 16px",
             background: "transparent",
             border: "1px dashed rgba(255,255,255,0.08)",
-            borderRadius: 14, cursor: "pointer",
+            borderRadius: 12, cursor: "pointer",
             transition: "border-color 0.2s, background 0.2s",
           }}
-          onTouchStart={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.25)"; e.currentTarget.style.background = "rgba(239,68,68,0.03)"; }}
+          onTouchStart={e => { e.currentTarget.style.borderColor = "rgba(255,69,58,0.25)"; e.currentTarget.style.background = "rgba(255,69,58,0.03)"; }}
           onTouchEnd={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}
         >
           <Wind size={13} color="var(--fg3)" strokeWidth={2} />
@@ -237,20 +243,11 @@ export default function Home() {
         position: "sticky", bottom: 0, zIndex: 20,
         padding: "12px 16px",
         paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
-        backgroundColor: "rgba(8,8,8,0.92)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderTop: "1px solid var(--border)",
+        background: "#000000",
         display: "flex", gap: 8, alignItems: "center",
       }}>
-        {/* Goal pill */}
-        <div style={{
-          flex: 1, display: "flex", alignItems: "center", gap: 10,
-          background: "var(--surface)", border: "1px solid var(--border)",
-          borderRadius: 14, padding: "10px 14px",
-          minWidth: 0,
-        }}>
-          <Target size={14} color="var(--green)" strokeWidth={2} style={{ flexShrink: 0 }} />
+        {/* Goal — plain text, tap to edit */}
+        <div style={{ flex: 1, minWidth: 0 }}>
           {editGoal ? (
             <input
               autoFocus
@@ -261,41 +258,40 @@ export default function Home() {
               onKeyDown={e => e.key === "Enter" && handleGoalSave()}
               placeholder={String(store.today.goal)}
               style={{
-                flex: 1, minWidth: 0,
                 background: "transparent", border: "none", outline: "none",
-                color: "var(--fg)", fontSize: 13, fontWeight: 600,
-                fontFamily: "var(--font-body)",
+                color: "var(--fg)", fontSize: 15, fontWeight: 400,
+                fontFamily: "var(--font-body)", width: "100%",
               }}
             />
           ) : (
             <button
               onClick={() => { setEditGoal(true); setGoalVal(String(store.today.goal)); }}
               style={{
-                flex: 1, textAlign: "left",
                 background: "transparent", border: "none", cursor: "pointer",
-                color: "var(--fg)", fontSize: 13, fontWeight: 600,
+                color: "var(--fg2)", fontSize: 15, fontWeight: 400,
                 fontFamily: "var(--font-body)", padding: 0,
-                whiteSpace: "nowrap", overflow: "hidden",
+                whiteSpace: "nowrap",
               }}
             >
-              {store.today.goal.toLocaleString()} kcal
+              {store.today.goal.toLocaleString()} kcal goal
             </button>
           )}
         </div>
 
-        {/* Reset */}
+        {/* Reset — text-only, red */}
         <button
           onClick={handleReset}
-          className="btn-ghost"
           style={{
-            height: 44, padding: "0 14px", fontSize: 12,
-            display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
+            background: "transparent", border: "none", cursor: "pointer",
             color: confirmReset ? "var(--red)" : "var(--fg3)",
-            borderColor: confirmReset ? "rgba(239,68,68,0.3)" : "var(--border)",
-            transition: "all 0.2s",
+            fontSize: 15, fontWeight: 400,
+            fontFamily: "var(--font-body)",
+            display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
+            padding: "0 4px",
+            transition: "color 0.2s",
           }}
         >
-          <RotateCcw size={13} strokeWidth={2} />
+          <RotateCcw size={14} strokeWidth={2} />
           {confirmReset ? "Sure?" : "Reset"}
         </button>
 
@@ -306,7 +302,7 @@ export default function Home() {
           aria-label="Add meal"
           style={{ flexShrink: 0 }}
         >
-          <Plus size={24} strokeWidth={2.5} color="#000" />
+          <Plus size={22} strokeWidth={2.5} color="#000" />
         </button>
       </footer>
     </div>

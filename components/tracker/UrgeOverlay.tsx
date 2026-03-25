@@ -45,12 +45,11 @@ export function UrgeOverlay({ onDone }: Props) {
     : phase === "hold1" ? 1.25
     : phase === "out" ? 1.25 - prog * 0.25 : 1;
 
-  const borderColor = isWarm
-    ? `rgba(239,68,68,${0.5 + prog * 0.45})`
-    : `rgba(16,185,129,${0.45 + prog * 0.5})`;
-  const glowColor = isWarm
-    ? `rgba(239,68,68,${0.08 + prog * 0.15})`
-    : `rgba(16,185,129,${0.06 + prog * 0.18})`;
+  const boxShadow = isWarm
+    ? `0 0 0 2px #FF453A, 0 0 30px 4px rgba(255,69,58,0.25)`
+    : `0 0 0 2px #30D158, 0 0 30px 4px rgba(48,209,88,0.25)`;
+
+  const borderColor = isWarm ? "#FF453A" : "#30D158";
 
   const bg = done
     ? "radial-gradient(ellipse at 50% 40%, #042a1d 0%, #060606 70%)"
@@ -78,7 +77,7 @@ export function UrgeOverlay({ onDone }: Props) {
           {/* Timer */}
           <div style={{
             fontFamily: "var(--font-display)",
-            fontSize: 80, fontWeight: 500,
+            fontSize: 80, fontWeight: 700,
             color: "rgba(255,255,255,0.92)",
             letterSpacing: "-0.05em", lineHeight: 1,
             marginBottom: 10,
@@ -90,29 +89,16 @@ export function UrgeOverlay({ onDone }: Props) {
           </p>
 
           {/* Breathing square */}
-          <div style={{ position: "relative", width: 200, height: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {/* Outer blur glow */}
-            <div style={{
-              position: "absolute", inset: 0,
-              background: glowColor,
-              borderRadius: "40%",
-              transform: `scale(${scale * 1.6})`,
-              transition: "transform 0.1s linear, background 0.6s ease",
-              filter: "blur(24px)",
-            }} />
-            {/* Square */}
-            <div style={{
-              width: 120, height: 120,
-              borderRadius: 26,
-              border: `2px solid ${borderColor}`,
-              background: `rgba(255,255,255,0.015)`,
-              transform: `scale(${scale})`,
-              transition: "transform 0.1s linear, border-color 0.5s ease",
-              boxShadow: `0 0 0 1px ${glowColor}, 0 0 40px ${borderColor.replace("0.9","0.2").replace("0.5","0.15")}`,
-            }} />
-          </div>
+          <div style={{ width: 120, height: 120, borderRadius: 26,
+            border: `2px solid ${borderColor}`,
+            background: "transparent",
+            transform: `scale(${scale})`,
+            transition: "transform 0.1s linear, border-color 0.5s ease, box-shadow 0.5s ease",
+            boxShadow,
+            willChange: "transform, box-shadow",
+          }} />
 
-          <p style={{ marginTop: 36, fontSize: 16, fontWeight: 500,
+          <p style={{ marginTop: 52, fontSize: 16, fontWeight: 500,
             color: "rgba(255,255,255,0.6)", letterSpacing: "0.02em" }}>
             {LABELS[phase]}
           </p>
@@ -129,7 +115,7 @@ export function UrgeOverlay({ onDone }: Props) {
                 width: p === phase ? 24 : 6,
                 borderRadius: 2,
                 background: p === phase
-                  ? (isWarm ? "var(--red)" : "var(--green)")
+                  ? (isWarm ? "#FF453A" : "#30D158")
                   : "rgba(255,255,255,0.12)",
                 transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
               }} />
