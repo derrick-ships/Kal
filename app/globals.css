@@ -9,6 +9,7 @@
   --primary: #10B981;
   --muted-foreground: #6B7280;
   --border: rgba(0,0,0,0.08);
+  --ring-track: rgba(0,0,0,0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,6 +18,7 @@
     --foreground: #F9FAFB;
     --card: #1A1A1A;
     --border: rgba(255,255,255,0.08);
+    --ring-track: rgba(255,255,255,0.1);
   }
 }
 
@@ -25,11 +27,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-  max-width: 480px;
-  margin: 0 auto;
 }
 
 body {
@@ -38,6 +37,19 @@ body {
   color: var(--foreground);
   min-height: 100dvh;
   overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  max-width: 480px;
+  margin: 0 auto;
+  /* CRITICAL: position relative so fixed children inside body stack correctly */
+  position: relative;
+}
+
+/* Fixed/absolute overlays need to escape body's stacking context */
+.overlay-portal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
 }
 
 .glass-card {
@@ -45,6 +57,10 @@ body {
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.ring-track {
+  color: var(--ring-track);
 }
 
 @keyframes breathe {
