@@ -1,42 +1,48 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface Props { current: number; goal: number; size?: number; }
 
-export function CircleProgress({ current, goal, size = 120 }: Props) {
-  const [animated, setAnimated] = useState(0);
-  const strokeWidth = 8;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+export function CircleProgress({ current, goal, size = 160 }: Props) {
+  const progressRef = useRef<SVGCircleElement>(null);
+  const sw = 10;
+  const r = (size - sw) / 2;
+  const circ = 2 * Math.PI * r;
   const pct = Math.min(current / Math.max(goal, 1), 1);
-  const offset = circumference - animated * circumference;
-  const isGoalHit = current >= goal && goal > 0;
+  const offset = circ * (1 - pct);
+  const isHit = current >= goal && goal > 0;
 
   useEffect(() => {
-    const t = setTimeout(() => setAnimated(pct), 100);
-    return () => clearTimeout(t);
-  }, [pct]);
+    if (!progressRef.current) return;
+    progressRef.current.style.transition = "stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)";
+    progressRef.current.style.strokeDashoffset = String(offset);
+  }, [offset]);
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={radius} fill="none"
-          stroke="var(--ring-track)" strokeWidth={strokeWidth} />
-        <circle cx={size/2} cy={size/2} r={radius} fill="none"
-          stroke="url(#emeraldGrad)" strokeWidth={strokeWidth} strokeLinecap="round"
-          strokeDasharray={circumference} strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.8s ease-out" }} />
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      {pct > 0 && (
+        <div style={{
+          position: "absolute", inset: 0, borderRadius: "50%",
+          background: `radial-gradient(circle, rgba(16,185,129,${pct * 0.18}) 0%, transparent 70%)`,
+          transition: "background 1s ease",
+        }} />
+      )}
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none"
+          stroke="rgba(255,255,255,0.05)" strokeWidth={sw} />
+        <circle ref={progressRef} cx={size/2} cy={size/2} r={r} fill="none"
+          stroke={isHit ? "#10B981" : "url(#emerald)"}
+          strokeWidth={sw} strokeLinecap="round"
+          strokeDasharray={circ} strokeDashoffset={circ}
+          style={{ filter: pct > 0 ? "drop-shadow(0 0 8px rgba(16,185,129,0.7))" : "none" }}
+        />
         <defs>
-          <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="emerald" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#059669" />
-            <stop offset="100%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#34d399" />
           </linearGradient>
         </defs>
       </svg>
-      {isGoalHit && (
-        <div className="absolute inset-0 rounded-full border-4 border-emerald-400/50"
-          style={{ animation: "pulse-glow 2s ease-in-out infinite" }} />
-      )}
     </div>
   );
 }
