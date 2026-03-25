@@ -1,10 +1,10 @@
 "use client";
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { Plus, Flame, RotateCcw, Wind } from "lucide-react";
+import { Plus, RotateCcw, Wind } from "lucide-react";
 import { useCalorieStore } from "@/hooks/useCalorieStore";
 import { useSwipe } from "@/hooks/useSwipe";
-import { CircleProgress } from "@/components/tracker/CircleProgress";
+import { FluidProgress } from "@/components/tracker/FluidProgress";
 import { MealCard } from "@/components/tracker/MealCard";
 import { AddMealModal } from "@/components/tracker/AddMealModal";
 import { UrgeOverlay } from "@/components/tracker/UrgeOverlay";
@@ -24,7 +24,7 @@ export default function Home() {
   const [kcalKey, setKcalKey] = useState(0);
 
   const triggerUrge = useCallback(() => {
-    if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 150]);
+    if (navigator.vibrate) navigator.vibrate([60, 30, 80]);
     setUrgeOpen(true);
   }, []);
 
@@ -33,8 +33,8 @@ export default function Home() {
   const handleLog = useCallback((meal: typeof store.meals[0]) => {
     const prev = store.today.kcal;
     logMeal(meal);
-    if (navigator.vibrate) navigator.vibrate(50);
-    setToast(`+${meal.kcal} kcal`);
+    if (navigator.vibrate) navigator.vibrate([30, 15, 50]);
+    setToast(`${meal.name} · ${meal.kcal} kcal`);
     setKcalKey(k => k + 1);
     if (prev < store.today.goal && prev + meal.kcal >= store.today.goal) {
       setConfetti(true);
@@ -44,14 +44,14 @@ export default function Home() {
 
   const handleAdd = useCallback((name: string, kcal: number) => {
     addMeal(name, kcal);
-    if (navigator.vibrate) navigator.vibrate(50);
-    setToast(`${name} · +${kcal} kcal`);
+    if (navigator.vibrate) navigator.vibrate([30, 15, 50]);
+    setToast(`${name} saved`);
     setKcalKey(k => k + 1);
   }, [addMeal]);
 
   const handleGoalSave = useCallback(() => {
     const g = parseInt(goalVal);
-    if (g > 0) setGoal(g);
+    if (g > 0) { setGoal(g); if (navigator.vibrate) navigator.vibrate(25); }
     setEditGoal(false);
     setGoalVal("");
   }, [goalVal, setGoal]);
@@ -59,150 +59,198 @@ export default function Home() {
   const handleReset = useCallback(() => {
     if (!confirmReset) {
       setConfirmReset(true);
+      if (navigator.vibrate) navigator.vibrate(25);
       setTimeout(() => setConfirmReset(false), 3000);
       return;
     }
     resetDay();
     setConfirmReset(false);
     setToast("Day reset");
+    if (navigator.vibrate) navigator.vibrate([25, 15, 40]);
     setKcalKey(k => k + 1);
   }, [confirmReset, resetDay]);
 
-  const pct = Math.round((store.today.kcal / Math.max(store.today.goal, 1)) * 100);
+  const pct = Math.min(store.today.kcal / Math.max(store.today.goal, 1), 1);
   const remaining = Math.max(store.today.goal - store.today.kcal, 0);
   const isHit = store.today.kcal >= store.today.goal && store.today.goal > 0;
 
   return (
-    <div
-      style={{ position: "relative", zIndex: 1, minHeight: "100dvh", display: "flex", flexDirection: "column" }}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
+    <>
+      {/* Urge overlay lives outside the blurred container */}
       {urgeOpen && <UrgeOverlay onDone={() => setUrgeOpen(false)} />}
+
       {confetti && <Confetti />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       <AddMealModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleAdd} />
 
-      {/* ── HEADER ── */}
-      <header style={{
-        padding: "56px 20px 20px",
-        paddingTop: "max(56px, calc(env(safe-area-inset-top) + 16px))",
-        position: "sticky", top: 0, zIndex: 20,
-        background: "#000000",
-      }}>
-        {/* App title */}
-        <h1 style={{
-          fontSize: 34, fontWeight: 700,
-          color: "var(--fg)",
-          letterSpacing: "-0.02em",
-          lineHeight: 1.1,
-          fontFamily: "var(--font-display)",
+      {/* Main screen — dims + scales away when urge overlay opens */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          minHeight: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          transition: "transform 0.55s cubic-bezier(0.16,1,0.3,1), opacity 0.55s ease, filter 0.55s ease",
+          transform: urgeOpen ? "scale(0.92)" : "scale(1)",
+          opacity: urgeOpen ? 0.3 : 1,
+          filter: urgeOpen ? "blur(4px)" : "none",
+          transformOrigin: "50% 40%",
+        }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* ── HEADER ── */}
+        <header style={{
+          padding: "0 28px 0",
+          paddingTop: "max(52px, calc(env(safe-area-inset-top) + 20px))",
         }}>
-          KalTrak
-        </h1>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <h1 style={{
+              fontSize: 26,
+              fontWeight: 300,
+              color: "var(--fg)",
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              lineHeight: 1,
+            }}>
+              Kal
+            </h1>
+            <span style={{
+              fontSize: 10,
+              color: "var(--fg3)",
+              fontWeight: 400,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}>
+              {format(new Date(), "EEE, MMM d")}
+            </span>
+          </div>
+        </header>
 
-        {/* Date subtitle */}
-        <p style={{
-          fontSize: 15, color: "var(--fg2)",
-          marginTop: 2, marginBottom: 20,
+        {/* ── ORB + NUMBERS ── */}
+        <section style={{
+          padding: "36px 28px 0",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}>
-          {format(new Date(), "EEEE, MMM d")}
-        </p>
+          <FluidProgress pct={pct} size={180} />
 
-        {/* Ring + numbers row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* Ring with % inside */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <CircleProgress current={store.today.kcal} goal={store.today.goal} size={84} />
+          <div
+            key={kcalKey}
+            className="anim-num"
+            style={{ marginTop: 28, textAlign: "center" }}
+          >
             <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "center",
+              gap: 7,
             }}>
               <span style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 13, fontWeight: 600,
+                fontSize: 68,
+                fontWeight: 200,
                 color: "var(--fg)",
-              }}>
-                {pct}%
-              </span>
-            </div>
-          </div>
-
-          {/* Calorie numbers */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              key={kcalKey}
-              className="anim-num"
-              style={{ display: "flex", alignItems: "baseline", gap: 5 }}
-            >
-              <span style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 34, fontWeight: 700,
-                color: "var(--fg)",
-                letterSpacing: "-0.02em",
+                letterSpacing: "-0.04em",
                 lineHeight: 1,
               }}>
                 {store.today.kcal.toLocaleString()}
               </span>
-              <span style={{ fontSize: 15, color: "var(--fg2)", fontWeight: 400, paddingBottom: 2 }}>
+              <span style={{
+                fontSize: 14,
+                color: "var(--fg3)",
+                fontWeight: 300,
+                paddingBottom: 6,
+                letterSpacing: "0.04em",
+              }}>
                 kcal
               </span>
             </div>
 
             <p style={{
-              fontSize: 15, marginTop: 4, fontWeight: 400,
-              color: "var(--fg2)",
+              fontSize: 11,
+              marginTop: 9,
+              fontWeight: 400,
+              color: isHit ? "var(--accent)" : "var(--fg3)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
             }}>
-              {isHit ? "Goal reached" : `${remaining.toLocaleString()} remaining`}
+              {isHit ? "goal reached" : `${remaining.toLocaleString()} remaining`}
             </p>
           </div>
-        </div>
-      </header>
 
-      {/* ── BODY ── */}
-      <section style={{ flex: 1, padding: "20px 16px 0" }}>
-
-        {/* Meals card */}
-        <div style={{
-          background: "var(--card)",
-          borderRadius: 12,
-          overflow: "hidden",
-        }}>
-          {/* Section header inside card */}
-          <div style={{ padding: "16px 16px 8px" }}>
-            <span style={{
-              fontSize: 12, fontWeight: 600, letterSpacing: "0.08em",
-              textTransform: "uppercase", color: "var(--fg3)",
-            }}>
-              Saved Meals
-              {store.meals.length > 0 && (
-                <span style={{ marginLeft: 8, fontWeight: 400 }}>
-                  {store.meals.length}
-                </span>
-              )}
-            </span>
+          {/* Minimal progress rule */}
+          <div style={{
+            width: "100%",
+            marginTop: 24,
+            height: 1,
+            background: "var(--border)",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              height: "100%",
+              width: `${Math.min(pct * 100, 100)}%`,
+              background: isHit
+                ? "var(--accent)"
+                : `linear-gradient(to right, rgba(196,164,124,0.4), var(--accent))`,
+              transition: "width 1.3s cubic-bezier(0.16,1,0.3,1)",
+            }} />
           </div>
 
-          {/* List */}
-          {!loaded ? <SkeletonList /> : store.meals.length === 0 ? (
-            <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              justifyContent: "center", padding: "40px 24px", gap: 10, textAlign: "center",
+          <div style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 7,
+          }}>
+            <span style={{ fontSize: 10, color: "var(--fg3)", letterSpacing: "0.04em" }}>0</span>
+            <span style={{ fontSize: 10, color: "var(--fg3)", letterSpacing: "0.04em" }}>
+              {store.today.goal.toLocaleString()}
+            </span>
+          </div>
+        </section>
+
+        {/* ── MEALS ── */}
+        <section style={{ flex: 1, padding: "36px 0 0" }}>
+          <div style={{
+            padding: "0 28px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}>
+            <span style={{
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--fg3)",
             }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: "rgba(48,209,88,0.12)",
-                display: "flex", alignItems: "center", justifyContent: "center",
+              Saved meals
+            </span>
+            {store.meals.length > 0 && (
+              <span style={{ fontSize: 10, color: "var(--fg3)", letterSpacing: "0.06em" }}>
+                {store.meals.length}
+              </span>
+            )}
+          </div>
+
+          {!loaded ? (
+            <SkeletonList />
+          ) : store.meals.length === 0 ? (
+            <div style={{ padding: "32px 28px", textAlign: "center" }}>
+              <p style={{
+                color: "var(--fg3)",
+                fontSize: 13,
+                fontWeight: 300,
+                letterSpacing: "0.02em",
+                lineHeight: 1.7,
               }}>
-                <Flame size={20} color="var(--green)" strokeWidth={1.5} />
-              </div>
-              <p style={{ color: "var(--fg2)", fontSize: 15, fontWeight: 400 }}>
-                Your favorites will appear here.
+                No meals saved yet.<br />Tap + to add your first.
               </p>
-              <p style={{ color: "var(--fg3)", fontSize: 13 }}>Tap + to log your first meal.</p>
             </div>
           ) : (
-            <div>
+            <div style={{ borderTop: "1px solid var(--border)" }}>
               {store.meals.map((meal, i) => (
                 <MealCard
                   key={meal.id}
@@ -214,97 +262,139 @@ export default function Home() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* ── URGE TRIGGER ── */}
+        <div style={{ padding: "20px 28px 16px" }}>
+          <button
+            onClick={triggerUrge}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              width: "100%",
+              padding: "14px 16px",
+              background: "transparent",
+              border: "1px solid var(--border)",
+              borderRadius: 2,
+              cursor: "pointer",
+              transition: "border-color 0.3s, background 0.3s",
+            }}
+            onTouchStart={e => {
+              e.currentTarget.style.borderColor = "rgba(196,164,124,0.3)";
+              e.currentTarget.style.background = "rgba(196,164,124,0.03)";
+            }}
+            onTouchEnd={e => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <Wind size={11} color="var(--fg3)" strokeWidth={1.5} />
+            <span style={{
+              fontSize: 10,
+              color: "var(--fg3)",
+              fontWeight: 400,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}>
+              90-second urge interrupt
+            </span>
+          </button>
         </div>
 
-        {/* Urge trigger hint */}
-        <button
-          onClick={triggerUrge}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            gap: 8, width: "100%", marginTop: 16,
-            padding: "11px 16px",
-            background: "transparent",
-            border: "1px dashed rgba(255,255,255,0.08)",
-            borderRadius: 12, cursor: "pointer",
-            transition: "border-color 0.2s, background 0.2s",
-          }}
-          onTouchStart={e => { e.currentTarget.style.borderColor = "rgba(255,69,58,0.25)"; e.currentTarget.style.background = "rgba(255,69,58,0.03)"; }}
-          onTouchEnd={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}
-        >
-          <Wind size={13} color="var(--fg3)" strokeWidth={2} />
-          <span style={{ fontSize: 11, color: "var(--fg3)", fontWeight: 500, letterSpacing: "0.02em" }}>
-            Swipe right or tap — 90s urge interrupt
-          </span>
-        </button>
-      </section>
+        {/* ── FOOTER ── */}
+        <footer style={{
+          position: "sticky",
+          bottom: 0,
+          zIndex: 20,
+          padding: "12px 28px",
+          paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
+          background: "var(--bg)",
+          borderTop: "1px solid var(--border)",
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {editGoal ? (
+              <input
+                autoFocus
+                type="number"
+                inputMode="numeric"
+                value={goalVal}
+                onChange={e => setGoalVal(e.target.value)}
+                onBlur={handleGoalSave}
+                onKeyDown={e => e.key === "Enter" && handleGoalSave()}
+                placeholder={String(store.today.goal)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "var(--fg)",
+                  fontSize: 13,
+                  fontWeight: 300,
+                  fontFamily: "var(--font-body)",
+                  width: "100%",
+                  letterSpacing: "0.04em",
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => { setEditGoal(true); setGoalVal(String(store.today.goal)); }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--fg3)",
+                  fontSize: 13,
+                  fontWeight: 300,
+                  fontFamily: "var(--font-body)",
+                  padding: 0,
+                  whiteSpace: "nowrap",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {store.today.goal.toLocaleString()} kcal goal
+              </button>
+            )}
+          </div>
 
-      {/* ── FOOTER ── */}
-      <footer style={{
-        position: "sticky", bottom: 0, zIndex: 20,
-        padding: "12px 16px",
-        paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
-        background: "#000000",
-        display: "flex", gap: 8, alignItems: "center",
-      }}>
-        {/* Goal — plain text, tap to edit */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {editGoal ? (
-            <input
-              autoFocus
-              type="number" inputMode="numeric"
-              value={goalVal}
-              onChange={e => setGoalVal(e.target.value)}
-              onBlur={handleGoalSave}
-              onKeyDown={e => e.key === "Enter" && handleGoalSave()}
-              placeholder={String(store.today.goal)}
-              style={{
-                background: "transparent", border: "none", outline: "none",
-                color: "var(--fg)", fontSize: 15, fontWeight: 400,
-                fontFamily: "var(--font-body)", width: "100%",
-              }}
-            />
-          ) : (
-            <button
-              onClick={() => { setEditGoal(true); setGoalVal(String(store.today.goal)); }}
-              style={{
-                background: "transparent", border: "none", cursor: "pointer",
-                color: "var(--fg2)", fontSize: 15, fontWeight: 400,
-                fontFamily: "var(--font-body)", padding: 0,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {store.today.goal.toLocaleString()} kcal goal
-            </button>
-          )}
-        </div>
+          <button
+            onClick={handleReset}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: confirmReset ? "var(--red)" : "var(--fg3)",
+              fontSize: 13,
+              fontWeight: 300,
+              fontFamily: "var(--font-body)",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              flexShrink: 0,
+              padding: "0 4px",
+              transition: "color 0.3s",
+              letterSpacing: "0.04em",
+            }}
+          >
+            <RotateCcw size={11} strokeWidth={1.5} />
+            {confirmReset ? "confirm?" : "reset"}
+          </button>
 
-        {/* Reset — text-only, red */}
-        <button
-          onClick={handleReset}
-          style={{
-            background: "transparent", border: "none", cursor: "pointer",
-            color: confirmReset ? "var(--red)" : "var(--fg3)",
-            fontSize: 15, fontWeight: 400,
-            fontFamily: "var(--font-body)",
-            display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
-            padding: "0 4px",
-            transition: "color 0.2s",
-          }}
-        >
-          <RotateCcw size={14} strokeWidth={2} />
-          {confirmReset ? "Sure?" : "Reset"}
-        </button>
-
-        {/* FAB */}
-        <button
-          onClick={() => setModalOpen(true)}
-          className="fab"
-          aria-label="Add meal"
-          style={{ flexShrink: 0 }}
-        >
-          <Plus size={22} strokeWidth={2.5} color="#000" />
-        </button>
-      </footer>
-    </div>
+          <button
+            onClick={() => {
+              setModalOpen(true);
+              if (navigator.vibrate) navigator.vibrate(25);
+            }}
+            className="fab"
+            aria-label="Add meal"
+          >
+            <Plus size={20} strokeWidth={2} color="var(--bg)" />
+          </button>
+        </footer>
+      </div>
+    </>
   );
 }

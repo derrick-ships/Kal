@@ -15,23 +15,31 @@ export function UrgeOverlay({ onDone }: Props) {
   const [done, setDone] = useState(false);
   const phaseIdx = useRef(0);
 
-  useEffect(() => { if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 150]); }, []);
+  // Entrance haptic
+  useEffect(() => {
+    if (navigator.vibrate) navigator.vibrate([60, 30, 80]);
+  }, []);
 
+  // Countdown
   useEffect(() => {
     if (done) return;
     const id = setInterval(() => setT(p => {
-      if (p <= 1) { clearInterval(id); setDone(true); setTimeout(onDone, 2800); return 0; }
+      if (p <= 1) { clearInterval(id); setDone(true); setTimeout(onDone, 2600); return 0; }
       return p - 1;
     }), 1000);
     return () => clearInterval(id);
   }, [done, onDone]);
 
+  // Phase cycling
   useEffect(() => {
     if (done) return;
     const id = setInterval(() => setPt(p => {
       if (p + 100 >= PHASE_MS) {
         phaseIdx.current = (phaseIdx.current + 1) % 4;
-        setPhase(PHASES[phaseIdx.current]);
+        const newPhase = PHASES[phaseIdx.current];
+        setPhase(newPhase);
+        // Subtle haptic on phase change
+        if (navigator.vibrate) navigator.vibrate(12);
         return 0;
       }
       return p + 100;
@@ -40,94 +48,187 @@ export function UrgeOverlay({ onDone }: Props) {
   }, [done]);
 
   const prog = pt / PHASE_MS;
-  const isWarm = phase === "in" || phase === "hold1";
-  const scale = phase === "in" ? 1 + prog * 0.25
-    : phase === "hold1" ? 1.25
-    : phase === "out" ? 1.25 - prog * 0.25 : 1;
+  const isExpand = phase === "in" || phase === "hold1";
 
-  const boxShadow = isWarm
-    ? `0 0 0 2px #FF453A, 0 0 30px 4px rgba(255,69,58,0.25)`
-    : `0 0 0 2px #30D158, 0 0 30px 4px rgba(48,209,88,0.25)`;
+  const scale = phase === "in" ? 1 + prog * 0.3
+    : phase === "hold1" ? 1.3
+    : phase === "out" ? 1.3 - prog * 0.3
+    : 1.0;
 
-  const borderColor = isWarm ? "#FF453A" : "#30D158";
-
-  const bg = done
-    ? "radial-gradient(ellipse at 50% 40%, #042a1d 0%, #060606 70%)"
-    : isWarm
-    ? "radial-gradient(ellipse at 50% 40%, #200808 0%, #060606 70%)"
-    : "radial-gradient(ellipse at 50% 40%, #041c12 0%, #060606 70%)";
-
-  const mins = String(Math.floor(t / 60)).padStart(2, "0");
-  const secs = String(t % 60).padStart(2, "0");
+  // Warm/cool accent per phase
+  const accentColor = isExpand ? "rgba(196,164,124,0.7)" : "rgba(180,200,196,0.6)";
+  const bgGlow = isExpand
+    ? "radial-gradient(ellipse at 50% 55%, rgba(196,164,124,0.06) 0%, transparent 65%)"
+    : "radial-gradient(ellipse at 50% 55%, rgba(160,185,196,0.06) 0%, transparent 65%)";
 
   return (
-    <div className="overlay-portal anim-urge-in" style={{
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      background: bg, transition: "background 2s ease",
-    }}>
+    <div
+      className="overlay-portal anim-urge-in"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0A0A08",
+      }}
+    >
+      {/* Background glow */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: bgGlow,
+        transition: "background 2s ease",
+        pointerEvents: "none",
+      }} />
+
       {!done ? (
         <>
           {/* Label */}
-          <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.2)", marginBottom: 36,
-            fontFamily: "var(--font-display)" }}>
+          <p style={{
+            fontSize: 9,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "rgba(240,235,224,0.2)",
+            marginBottom: 48,
+            fontFamily: "var(--font-display)",
+          }}>
             urge interrupt
           </p>
 
-          {/* Timer */}
+          {/* Large countdown number */}
           <div style={{
             fontFamily: "var(--font-display)",
-            fontSize: 80, fontWeight: 700,
-            color: "rgba(255,255,255,0.92)",
-            letterSpacing: "-0.05em", lineHeight: 1,
-            marginBottom: 10,
+            fontSize: 108,
+            fontWeight: 100,
+            color: "rgba(240,235,224,0.88)",
+            letterSpacing: "-0.05em",
+            lineHeight: 1,
+            marginBottom: 8,
+            fontVariantNumeric: "tabular-nums",
+            transition: "color 0.5s ease",
           }}>
-            {mins}:{secs}
+            {t}
           </div>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 60, letterSpacing: "0.04em" }}>
-            {LABELS[phase].toLowerCase()}
+
+          <p style={{
+            fontSize: 10,
+            color: "rgba(240,235,224,0.22)",
+            marginBottom: 56,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}>
+            seconds
           </p>
 
-          {/* Breathing square */}
-          <div style={{ width: 120, height: 120, borderRadius: 26,
-            border: `2px solid ${borderColor}`,
-            background: "transparent",
-            transform: `scale(${scale})`,
-            transition: "transform 0.1s linear, border-color 0.5s ease, box-shadow 0.5s ease",
-            boxShadow,
-            willChange: "transform, box-shadow",
-          }} />
+          {/* Breathing orb */}
+          <div style={{ position: "relative", width: 100, height: 100 }}>
+            {/* Glow ring */}
+            <div style={{
+              position: "absolute",
+              inset: -8,
+              borderRadius: "50%",
+              background: `radial-gradient(circle, ${accentColor.replace("0.7", "0.12")} 0%, transparent 70%)`,
+              filter: "blur(8px)",
+              transform: `scale(${scale})`,
+              transition: "transform 0.1s linear, background 1s ease",
+            }} />
+            {/* Orb */}
+            <div style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: "50%",
+              border: `1px solid ${accentColor}`,
+              background: `radial-gradient(circle at 40% 35%, ${accentColor.replace("0.7", "0.08")} 0%, transparent 70%)`,
+              transform: `scale(${scale})`,
+              transition: "transform 0.1s linear, border-color 1s ease, background 1s ease",
+              willChange: "transform",
+            }} />
+          </div>
 
-          <p style={{ marginTop: 52, fontSize: 16, fontWeight: 500,
-            color: "rgba(255,255,255,0.6)", letterSpacing: "0.02em" }}>
+          {/* Phase label */}
+          <p style={{
+            marginTop: 40,
+            fontSize: 14,
+            fontWeight: 300,
+            color: "rgba(240,235,224,0.55)",
+            letterSpacing: "0.06em",
+          }}>
             {LABELS[phase]}
           </p>
-          <p style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.18)",
-            fontFamily: "var(--font-display)", letterSpacing: "0.1em" }}>
+
+          <p style={{
+            marginTop: 5,
+            fontSize: 9,
+            color: "rgba(240,235,224,0.16)",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+          }}>
             4 · 4 · 4 · 4
           </p>
 
-          {/* Phase indicator — pill dots */}
-          <div style={{ display: "flex", gap: 6, marginTop: 32 }}>
+          {/* Phase dots */}
+          <div style={{ display: "flex", gap: 6, marginTop: 28 }}>
             {PHASES.map(p => (
               <div key={p} style={{
-                height: 4,
-                width: p === phase ? 24 : 6,
-                borderRadius: 2,
-                background: p === phase
-                  ? (isWarm ? "#FF453A" : "#30D158")
-                  : "rgba(255,255,255,0.12)",
-                transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
+                height: 2,
+                width: p === phase ? 22 : 5,
+                borderRadius: 1,
+                background: p === phase ? accentColor : "rgba(240,235,224,0.1)",
+                transition: "all 0.45s cubic-bezier(0.16,1,0.3,1)",
               }} />
             ))}
           </div>
+
+          {/* Dismiss */}
+          <button
+            onClick={() => { if (navigator.vibrate) navigator.vibrate(20); onDone(); }}
+            style={{
+              position: "absolute",
+              top: "max(28px, env(safe-area-inset-top))",
+              right: 24,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "rgba(240,235,224,0.2)",
+              fontSize: 10,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              fontFamily: "var(--font-body)",
+              padding: "8px 4px",
+            }}
+          >
+            esc
+          </button>
         </>
       ) : (
-        <div className="anim-fade-up" style={{ textAlign: "center", padding: "0 40px" }}>
-          <div style={{ fontSize: 60, marginBottom: 20 }}>💪</div>
-          <h2 style={{ fontSize: 30, fontWeight: 600, color: "var(--fg)",
-            letterSpacing: "-0.03em", marginBottom: 10 }}>Urge beaten.</h2>
-          <p style={{ color: "var(--fg3)", fontSize: 15 }}>Back to tracking.</p>
+        <div className="anim-fade-up" style={{ textAlign: "center", padding: "0 48px" }}>
+          <p style={{
+            fontSize: 9,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "rgba(196,164,124,0.5)",
+            marginBottom: 20,
+          }}>
+            complete
+          </p>
+          <h2 style={{
+            fontSize: 32,
+            fontWeight: 200,
+            color: "var(--fg)",
+            letterSpacing: "-0.02em",
+            lineHeight: 1.2,
+            marginBottom: 12,
+          }}>
+            Urge passed.
+          </h2>
+          <p style={{
+            color: "rgba(240,235,224,0.3)",
+            fontSize: 13,
+            fontWeight: 300,
+            letterSpacing: "0.04em",
+          }}>
+            Back to tracking.
+          </p>
         </div>
       )}
     </div>

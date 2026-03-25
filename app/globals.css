@@ -3,21 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --bg: #000000;
-  --card: #1C1C1E;
-  --card2: #2C2C2E;
-  --border: rgba(255,255,255,0.1);
-  --fg: #FFFFFF;
-  --fg2: rgba(235,235,245,0.6);
-  --fg3: rgba(235,235,245,0.3);
-  --green: #30D158;
-  --green-glow: rgba(48,209,88,0.2);
-  --red: #FF453A;
-  --font-display: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --bg: #0C0C0A;
+  --surface: #131210;
+  --surface2: #1A1917;
+  --border: rgba(245,240,232,0.07);
+  --border2: rgba(245,240,232,0.12);
+  --fg: #F0EBE0;
+  --fg2: rgba(240,235,224,0.5);
+  --fg3: rgba(240,235,224,0.28);
+  --accent: #C4A47C;
+  --accent-dim: rgba(196,164,124,0.10);
+  --accent-glow: rgba(196,164,124,0.22);
+  --red: #C0604A;
+  --font-display: -apple-system, "SF Pro Display", system-ui, sans-serif;
   --font-body: -apple-system, "SF Pro Text", system-ui, sans-serif;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-variant-numeric: tabular-nums; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  margin: 0; padding: 0;
+  font-variant-numeric: tabular-nums;
+}
 html { overscroll-behavior: none; background: var(--bg); }
 body {
   font-family: var(--font-body);
@@ -28,58 +35,78 @@ body {
   margin: 0 auto;
   overflow-x: hidden;
   overscroll-behavior: none;
-  position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 .overlay-portal { position: fixed; inset: 0; z-index: 9999; }
+
 .btn-primary {
-  background: var(--green);
-  color: #000;
+  background: var(--accent);
+  color: var(--bg);
   font-family: var(--font-body);
-  font-weight: 600;
-  border-radius: 12px;
+  font-weight: 500;
+  border-radius: 2px;
   border: none;
   cursor: pointer;
-  transition: all 0.15s;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
 }
-.btn-primary:active { transform: scale(0.97); filter: brightness(0.9); }
+.btn-primary:active { transform: scale(0.98); opacity: 0.88; }
+
 .btn-ghost {
   background: transparent;
   color: var(--fg3);
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   border: none;
-  border-radius: 12px;
+  border-radius: 2px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
-.btn-ghost:active { background: var(--card2); }
+.btn-ghost:active { color: var(--fg2); }
+
 .fab {
-  width: 56px; height: 56px;
-  background: var(--green);
+  width: 48px; height: 48px;
+  background: var(--accent);
   border: none; border-radius: 50%;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
   will-change: transform;
+  flex-shrink: 0;
 }
-.fab:active { transform: scale(0.92); }
+.fab:active { transform: scale(0.91); opacity: 0.9; }
+
 .input-field {
-  background: var(--card2);
+  background: transparent;
   border: none;
-  border-radius: 10px;
+  border-bottom: 1px solid var(--border2);
+  border-radius: 0;
   color: var(--fg);
   font-family: var(--font-body);
   font-size: 16px;
-  width: 100%; height: 44px;
-  padding: 0 16px;
+  font-weight: 300;
+  width: 100%; height: 48px;
+  padding: 0;
   outline: none;
-  transition: box-shadow 0.2s;
+  transition: border-color 0.2s;
+  letter-spacing: 0.01em;
 }
 .input-field::placeholder { color: var(--fg3); }
-.input-field:focus { box-shadow: 0 0 0 2px var(--green); }
+.input-field:focus { border-color: var(--accent); }
 
+/* ── Blob morph ── */
+@keyframes blobMorph {
+  0%   { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  20%  { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  40%  { border-radius: 50% 50% 30% 70% / 30% 30% 70% 70%; }
+  60%  { border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%; }
+  80%  { border-radius: 55% 45% 40% 60% / 40% 55% 45% 60%; }
+  100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+}
+
+/* ── Core animations ── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -88,31 +115,35 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes toastPop {
-  0%   { opacity: 0; transform: translateY(16px) scale(0.95); }
+  0%   { opacity: 0; transform: translateY(10px) scale(0.97); }
   15%  { opacity: 1; transform: translateY(0) scale(1); }
   85%  { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  100% { opacity: 0; transform: translateY(-6px) scale(0.98); }
 }
-@keyframes shimmer { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+@keyframes shimmer { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.45; } }
 @keyframes confetti {
   0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(140px) rotate(540deg); opacity: 0; }
 }
-@keyframes urgeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes urgeIn {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
 @keyframes numberCount {
-  from { transform: translateY(8px); opacity: 0; }
+  from { transform: translateY(6px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
 }
 
-.anim-fade-up  { animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
-.anim-fade-in  { animation: fadeIn 0.25s ease both; }
-.anim-sheet    { animation: slideSheet 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-.anim-shimmer  { animation: shimmer 1.8s ease-in-out infinite; }
-.anim-toast    { animation: toastPop 2.4s cubic-bezier(0.16,1,0.3,1) both; }
-.anim-urge-in  { animation: urgeIn 0.4s ease both; }
-.anim-num      { animation: numberCount 0.3s cubic-bezier(0.16,1,0.3,1) both; }
-.stagger > *:nth-child(1) { animation-delay: 0.05s; }
-.stagger > *:nth-child(2) { animation-delay: 0.10s; }
-.stagger > *:nth-child(3) { animation-delay: 0.15s; }
-.stagger > *:nth-child(4) { animation-delay: 0.20s; }
-.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.anim-fade-up  { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-fade-in  { animation: fadeIn 0.3s ease both; }
+.anim-sheet    { animation: slideSheet 0.45s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-shimmer  { animation: shimmer 2s ease-in-out infinite; }
+.anim-toast    { animation: toastPop 2.6s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-urge-in  { animation: urgeIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-num      { animation: numberCount 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+
+.stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger > *:nth-child(2) { animation-delay: 0.09s; }
+.stagger > *:nth-child(3) { animation-delay: 0.14s; }
+.stagger > *:nth-child(4) { animation-delay: 0.19s; }
+.stagger > *:nth-child(5) { animation-delay: 0.24s; }
