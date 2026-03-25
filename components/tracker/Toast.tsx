@@ -4,12 +4,25 @@ import { useEffect } from "react";
 interface Props { message: string; onDone: () => void; }
 
 export function Toast({ message, onDone }: Props) {
-  useEffect(() => { const t = setTimeout(onDone, 2200); return () => clearTimeout(t); }, [onDone]);
+  useEffect(() => { const t = setTimeout(onDone, 2400); return () => clearTimeout(t); }, [onDone]);
   return (
-    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-40 animate-toast pointer-events-none">
-      <div className="glass-card px-5 py-3 flex items-center gap-2 whitespace-nowrap">
-        <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-        <span className="text-sm font-semibold text-[#111827] dark:text-[#F9FAFB]">{message}</span>
+    <div className="overlay-portal anim-toast" style={{
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+      paddingBottom: "calc(110px + env(safe-area-inset-bottom))",
+      pointerEvents: "none",
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "12px 18px",
+        background: "var(--surface2)",
+        border: "1px solid var(--border2)",
+        borderRadius: 14,
+        boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+      }}>
+        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--green)", boxShadow: "0 0 8px var(--green)", flexShrink: 0 }} />
+        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", whiteSpace: "nowrap", fontFamily: "var(--font-body)" }}>
+          {message}
+        </span>
       </div>
     </div>
   );
