@@ -47,13 +47,22 @@ export function UrgeOverlay({ onDone }: Props) {
   const progress = phaseTime / PHASE_DURATION;
   const squareScale = phase === "in" ? 1 + progress * 0.18 : phase === "hold1" ? 1.18 : phase === "out" ? 1.18 - progress * 0.18 : 1;
   const squareColor = phase === "in" ? `rgba(239,68,68,${0.6 + progress * 0.3})` : phase === "hold1" ? "rgba(251,146,60,0.9)" : phase === "out" ? `rgba(16,185,129,${0.3 + progress * 0.6})` : "rgba(16,185,129,0.4)";
-  const bgClass = done ? "from-emerald-900/90 to-emerald-800/90" : phase === "in" || phase === "hold1" ? "from-red-950/95 via-red-900/80 to-orange-900/70" : "from-emerald-950/95 via-emerald-900/80 to-teal-900/70";
+
+  const bgColor = done
+    ? "linear-gradient(135deg, #064e3b, #065f46)"
+    : phase === "in" || phase === "hold1"
+    ? "linear-gradient(135deg, #450a0a, #7f1d1d, #431407)"
+    : "linear-gradient(135deg, #022c22, #064e3b, #0f4c40)";
+
   const mins = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const secs = String(timeLeft % 60).padStart(2, "0");
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br ${bgClass} animate-urge-in`}
-      style={{ transition: "background 2s ease" }}>
+    /* overlay-portal escapes the body max-width stacking context → true fullscreen */
+    <div
+      className="overlay-portal flex flex-col items-center justify-center animate-urge-in"
+      style={{ background: bgColor, transition: "background 2s ease" }}
+    >
       {!done ? (
         <>
           <div className="text-7xl font-bold text-white/90 tabular-nums mb-2">{mins}:{secs}</div>
